@@ -8,8 +8,13 @@ export interface Horse {
 	name: string;
 }
 
+export interface Race {
+	id: number;
+}
+
 export interface Bet {
 	id: number;
+	race: number;
 	horse: number;
 	amount: number;
 }
@@ -23,13 +28,16 @@ export class Bookie {
 		await db.insert(horse).values({ name: name });
 	}
 
-	async add_bet(horse_id: number, amount: number): Promise<void> {
-		await db.insert(bet).values({ horse: horse_id, amount: amount }).returning();
+	async add_bet(race_id: number, horse_id: number, amount: number): Promise<void> {
+		await db.insert(bet).values({ race: race_id, horse: horse_id, amount: amount }).returning();
 		const horse_name = await db.select().from(horse).where(eq(horse_id, horse.id));
 		// console.log(horse_name[0].name);
+		// try to reach printer to print ticket
+		var printer_url = `http://localhost:8000/print/${race_id}/${horse_id}/${horse_name[0].name}/${amount}`;
 		try {
-			await fetch(`http://localhost:8000/print/${horse_id}/${horse_name[0].name}/${amount}`);
+			await fetch(printer_url);
 		} catch (error) {
+			console.error(printer_url);
 			console.error('printer offline');
 		}
 	}
@@ -42,35 +50,42 @@ export class Bookie {
 		return await db.select().from(horse);
 	}
 
-	async get_total_bet(horse: Horse): Promise<number> {
+	async get_total_bet(race: Race, horse: Horse): Promise<number> {
 		return (
 			(
 				await db
 					.select({ value: sum(bet.amount).mapWith(Number) })
 					.from(bet)
+					.where(eq(bet.race, race.id))
 					.where(eq(bet.horse, horse.id))
 			)[0].value ?? 0
 		);
 	}
 
-	async get_last_five_bets(horse: Horse): Promise<Bet[]> {
+	async get_last_five_bets(race: Race, horse: Horse): Promise<Bet[]> {
 		return await db
 			.select()
 			.from(bet)
+			.where(eq(bet.race, race.id))
 			.where(eq(bet.horse, horse.id))
 			.orderBy(desc(bet.id))
 			.limit(5);
 	}
 
-	async get_net_total(): Promise<number> {
+	async get_net_total(race: Race): Promise<number> {
 		var total: number =
-			(await db.select({ value: sum(bet.amount).mapWith(Number) }).from(bet))[0].value ?? 0;
+			(
+				await db
+					.select({ value: sum(bet.amount).mapWith(Number) })
+					.from(bet)
+					.where(eq(bet.race, race.id))
+			)[0].value ?? 0;
 		return Math.floor(total / 2); // house takes 50%
 	}
 
-	async get_quote(horse: Horse) {
-		var net_pool = await this.get_net_total();
-		var total_bet = await this.get_total_bet(horse);
+	async get_quote(race: Race, horse: Horse) {
+		var net_pool = await this.get_net_total(race);
+		var total_bet = await this.get_total_bet(race, horse);
 		return total_bet > 0 ? (net_pool / total_bet).toFixed(2) : 0;
 	}
 }

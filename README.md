@@ -16,10 +16,11 @@ npm run dev -- --open
 
 If you are running the app for the first time, you will also need to setup the ORM: 
 ```bash
+cp .env.example .env
 npm run db:push
 ```
 
-you can then set the horses in the drizzle web UI with 
+you can then set the horses and two races in the drizzle web UI with 
 ```bash 
 npm run db:studio
 ```
