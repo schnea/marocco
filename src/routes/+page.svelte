@@ -32,6 +32,7 @@
 			<form method="POST" action="?/add">
 				<label>
 					<input type="hidden" name="horse" value={horse.id} />
+					<input type="hidden" name="race" value="1" />
 					<input name="amount" type="number" autocomplete="off" placeholder="Ω" />
 				</label>
 			</form>

@@ -1,23 +1,22 @@
 import { Bookie } from '$lib/bookie';
 import { horse } from '$lib/server/db/schema';
-import type { Horse } from '$lib/bookie';
+import type { Horse, Race } from '$lib/bookie';
 import type { PageServerLoad } from './$types';
 
 const bookie = new Bookie();
 
-export const load: PageServerLoad = async () => {
+export const load: PageServerLoad = async ({ url }) => {
+	var race: Race = url.searchParams.get('race') ?? '1';
 	var horses = await bookie.get_horses();
-
 	var tallies = await Promise.all(
 		horses.map(async (h: Horse) => ({
 			name: h.name,
 			id: h.id,
-			total: await bookie.get_total_bet(h),
-			quote: await bookie.get_quote(h),
-			last_bets: (await bookie.get_last_five_bets(h)).reverse()
+			total: await bookie.get_total_bet(race, h),
+			quote: await bookie.get_quote(race, h),
+			last_bets: (await bookie.get_last_five_bets(race, h)).reverse()
 		}))
 	);
-
 	return {
 		horse_tallies: tallies
 	};
@@ -26,7 +25,7 @@ export const load: PageServerLoad = async () => {
 export const actions = {
 	add: async ({ request }) => {
 		const data = await request.formData();
-		bookie.add_bet(data.get('horse'), data.get('amount'));
+		bookie.add_bet(data.get('race'), data.get('horse'), data.get('amount'));
 	},
 
 	delete: async ({ request }) => {
