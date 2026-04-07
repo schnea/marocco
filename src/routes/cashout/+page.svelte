@@ -1,14 +1,18 @@
 <script lang="ts">
 	import type { PageData } from './$types';
 	import 'charts.css';
+	import { page } from '$app/state';
+
 	let { data }: { data: PageData } = $props();
 	let quote = $state(0);
 	let stakes = $state(0);
+	let raceNumber = $derived(page.url.searchParams.get('race') || 1);
 </script>
 
 <div class="cashout">
 	<h1>💸💸💸 GEWINNBERECHNUNG 💸💸💸</h1>
 
+	<h2>Rennen #{raceNumber}</h2>
 	<h2>Winner:</h2>
 	<select name="winner" bind:value={quote}>
 		{#each data.horse_tallies as horse}

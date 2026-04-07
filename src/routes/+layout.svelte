@@ -1,11 +1,14 @@
 <script>
 	let { children } = $props();
+	import { page } from '$app/state';
+
+	let race = $derived(page.url.searchParams.get('race') || 1);
 </script>
 
 <nav>
-	<a href="/">home</a>
-	<a href="/cashout">$$$</a>
-	<a href="/ticker">TICKER</a>
+	<a href="/?race={race}">home</a>
+	<a href="/cashout?race={race}">$$$</a>
+	<a href="/ticker?race={race}">TICKER</a>
 </nav>
 
 {@render children()}

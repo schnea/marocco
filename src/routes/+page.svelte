@@ -1,11 +1,31 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import { invalidate } from '$app/navigation';
+	import { page } from '$app/state';
+	import { goto } from '$app/navigation';
 	import type { PageData } from './$types';
 	let { data }: { data: PageData } = $props();
+
+	let raceNumber = $derived(page.url.searchParams.get('race') || 1);
+
+	function updateRace(value) {
+		const url = new URL(page.url);
+		url.searchParams.set('race', value);
+
+		goto(url, { replaceState: true, keepFocus: true, noScroll: true });
+	}
 </script>
 
 <h1>Welcome to HORSE</h1>
+<input
+	type="range"
+	min="1"
+	max="2"
+	value={raceNumber}
+	oninput={(e) => updateRace(e.target.value)}
+/>
+<h2>Rennen #{raceNumber}</h2>
+<br />
 <div class="flex-container">
 	{#each data.horse_tallies as horse}
 		<div>
@@ -15,7 +35,7 @@
 			{#each horse.last_bets as bet}
 				<form
 					method="POST"
-					action="?/delete"
+					action="?/delete&race={raceNumber}"
 					onsubmit={(e) => {
 						if (!confirm('Eintrag löschen?')) {
 							e.preventDefault();
@@ -29,10 +49,10 @@
 					<input type="hidden" name="id" value={bet.id} />
 				</form>
 			{/each}
-			<form method="POST" action="?/add">
+			<form method="POST" action="?/add&race={raceNumber}">
 				<label>
 					<input type="hidden" name="horse" value={horse.id} />
-					<input type="hidden" name="race" value="1" />
+					<input type="hidden" name="race" value={raceNumber} />
 					<input name="amount" type="number" autocomplete="off" placeholder="Ω" />
 				</label>
 			</form>
