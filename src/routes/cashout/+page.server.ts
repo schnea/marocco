@@ -5,9 +5,9 @@ import type { PageServerLoad } from './$types';
 
 const bookie = new Bookie();
 
-export const load: PageServerLoad = async () => {
+export const load: PageServerLoad = async ({ url }) => {
 	var horses = await bookie.get_horses();
-	var race = 1;
+	var race: number = url.searchParams.get('race') ?? 1;
 	var tallies = await Promise.all(
 		horses.map(async (h: Horse) => ({
 			name: h.name,

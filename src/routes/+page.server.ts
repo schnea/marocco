@@ -6,7 +6,7 @@ import type { PageServerLoad } from './$types';
 const bookie = new Bookie();
 
 export const load: PageServerLoad = async ({ url }) => {
-	var race: Race = url.searchParams.get('race') ?? '1';
+	var race: number = url.searchParams.get('race') ?? 1;
 	var horses = await bookie.get_horses();
 	var tallies = await Promise.all(
 		horses.map(async (h: Horse) => ({
@@ -17,6 +17,7 @@ export const load: PageServerLoad = async ({ url }) => {
 			last_bets: (await bookie.get_last_five_bets(race, h)).reverse()
 		}))
 	);
+	console.log(tallies);
 	return {
 		horse_tallies: tallies
 	};

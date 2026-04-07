@@ -50,40 +50,38 @@ export class Bookie {
 		return await db.select().from(horse);
 	}
 
-	async get_total_bet(race: Race, horse: Horse): Promise<number> {
+	async get_total_bet(race: number, horse: Horse): Promise<number> {
 		return (
 			(
 				await db
 					.select({ value: sum(bet.amount).mapWith(Number) })
 					.from(bet)
-					.where(eq(bet.race, race.id))
-					.where(eq(bet.horse, horse.id))
+					.where(and(eq(bet.race, race), eq(bet.horse, horse.id)))
 			)[0].value ?? 0
 		);
 	}
 
-	async get_last_five_bets(race: Race, horse: Horse): Promise<Bet[]> {
+	async get_last_five_bets(race: number, horse: Horse): Promise<Bet[]> {
 		return await db
 			.select()
 			.from(bet)
-			.where(eq(bet.race, race.id))
-			.where(eq(bet.horse, horse.id))
+			.where(and(eq(bet.race, race), eq(bet.horse, horse.id)))
 			.orderBy(desc(bet.id))
 			.limit(5);
 	}
 
-	async get_net_total(race: Race): Promise<number> {
+	async get_net_total(race: number): Promise<number> {
 		var total: number =
 			(
 				await db
 					.select({ value: sum(bet.amount).mapWith(Number) })
 					.from(bet)
-					.where(eq(bet.race, race.id))
+					.where(eq(bet.race, race))
 			)[0].value ?? 0;
 		return Math.floor(total / 2); // house takes 50%
 	}
 
-	async get_quote(race: Race, horse: Horse) {
+	async get_quote(race: number, horse: Horse) {
 		var net_pool = await this.get_net_total(race);
 		var total_bet = await this.get_total_bet(race, horse);
 		return total_bet > 0 ? (net_pool / total_bet).toFixed(2) : 0;
